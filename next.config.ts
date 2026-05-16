@@ -12,9 +12,7 @@ const nextConfig: NextConfig = {
   },
   basePath: shouldUseBasePath ? `/${repositoryName}` : "",
   assetPrefix: shouldUseBasePath ? `/${repositoryName}/` : undefined,
-  experimental: {
-    typedRoutes: true
-  }
+  typedRoutes: true
 };
 
 export default nextConfig;

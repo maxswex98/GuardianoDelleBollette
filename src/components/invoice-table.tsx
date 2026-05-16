@@ -1,4 +1,3 @@
-import Link from "next/link";
 import type { InvoiceWithComparison } from "@/lib/types";
 import { withSiteBasePathRoute } from "@/lib/site-path";
 import { formatCurrency, formatDate, formatNumber, formatPercent } from "@/lib/utils";
@@ -53,7 +52,7 @@ export function InvoiceTable({
                   </span>
                 </td>
                 <td>
-                  <Link href={withSiteBasePathRoute(`/invoices/${invoice.id}`)}>Apri</Link>
+                  <a href={withSiteBasePathRoute(`/invoices/${invoice.id}`)}>Apri</a>
                 </td>
               </tr>
             ))}
