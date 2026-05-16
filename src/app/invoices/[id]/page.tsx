@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getInvoiceById, getStaticInvoiceIds } from "@/lib/db/queries";
 import { formatCurrency, formatDate, formatNumber, formatPercent } from "@/lib/utils";
@@ -44,9 +43,7 @@ export default async function InvoiceDetailPage({
             </p>
           </div>
           {invoice.publicPdfPath ? (
-            <Link href={invoice.publicPdfPath} className="trend-badge" target="_blank">
-              Apri PDF
-            </Link>
+            <a href={invoice.publicPdfPath} className="trend-badge" target="_blank" rel="noreferrer">Apri PDF</a>
           ) : (
             <span className="trend-badge">PDF non disponibile</span>
           )}
@@ -168,3 +165,6 @@ export async function generateStaticParams() {
   const ids = await getStaticInvoiceIds();
   return ids.map((id) => ({ id }));
 }
+
+
+
