@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { getAppSettings } from "@/lib/db/queries";
 
 const navItems = [
@@ -30,9 +29,9 @@ export async function Shell({ children }: { children: React.ReactNode }) {
 
           <nav className="nav">
             {navItems.map((item) => (
-              <Link key={item.href} href={item.href}>
+              <a key={item.href} href={item.href}>
                 {item.label}
-              </Link>
+              </a>
             ))}
           </nav>
         </div>
@@ -54,3 +53,4 @@ export async function Shell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
