@@ -1,0 +1,49 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run dev
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - type: bind
+        source: ${HOST_ARCHIVE_DIRECTORY}
+        target: /external/archive
+    depends_on:
+      - db
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: npm run worker
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - type: bind
+        source: ${HOST_WATCH_DIRECTORY}
+        target: /external/inbox
+      - type: bind
+        source: ${HOST_ARCHIVE_DIRECTORY}
+        target: /external/archive
+    depends_on:
+      - db
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: bill_guardian
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:

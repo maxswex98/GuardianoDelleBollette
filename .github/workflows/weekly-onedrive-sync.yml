@@ -1,0 +1,70 @@
+name: Weekly OneDrive Sync
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  sync-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Sync OneDrive and regenerate dataset
+        env:
+          ALERT_THRESHOLD_PERCENT: ${{ vars.ALERT_THRESHOLD_PERCENT || '15' }}
+          SITE_APP_NAME: ${{ vars.SITE_APP_NAME || 'Guardiano delle bollette' }}
+          SITE_OWNER_NAME: ${{ vars.SITE_OWNER_NAME || 'BERTOLI MASSIMILIANO' }}
+          SITE_CO_OWNER_NAME: ${{ vars.SITE_CO_OWNER_NAME || 'Alessandra Scordi' }}
+          SITE_SERVICE_ADDRESS: ${{ vars.SITE_SERVICE_ADDRESS || 'Via Emilia San Pietro, Reggio Emilia' }}
+          SITE_SOURCE_FOLDER_LABEL: ${{ vars.SITE_SOURCE_FOLDER_LABEL || 'Bollette' }}
+          ONEDRIVE_TENANT_ID: ${{ vars.ONEDRIVE_TENANT_ID || 'consumers' }}
+          ONEDRIVE_ARCHIVE_SHARE_URL: ${{ vars.ONEDRIVE_ARCHIVE_SHARE_URL }}
+          ONEDRIVE_INBOX_SHARE_URL: ${{ vars.ONEDRIVE_INBOX_SHARE_URL }}
+          ONEDRIVE_CLIENT_ID: ${{ secrets.ONEDRIVE_CLIENT_ID }}
+          ONEDRIVE_CLIENT_SECRET: ${{ secrets.ONEDRIVE_CLIENT_SECRET }}
+          ONEDRIVE_REFRESH_TOKEN: ${{ secrets.ONEDRIVE_REFRESH_TOKEN }}
+        run: npm run site:sync-onedrive
+
+      - name: Commit refreshed dataset
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/site-data.json public/pdfs data/manual-rules.json
+          git diff --cached --quiet || (git commit -m "chore: weekly bills sync" && git push)
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4

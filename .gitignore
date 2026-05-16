@@ -1,0 +1,7 @@
+.next
+node_modules
+.env
+data/archive
+data/staging
+data/processed
+*.log

@@ -1,0 +1,33 @@
+{
+  "ignoredFiles": [
+    "servizio-rifiuti-urbani",
+    "rimborso"
+  ],
+  "invoiceOverrides": {
+    "1776554601209-aprilegas.pdf": {
+      "utilityType": "gas",
+      "invoiceNumber": "83214-G",
+      "issueDate": "2025-05-15",
+      "dueDate": "2025-06-05",
+      "billingPeriodStart": "2025-04-01",
+      "billingPeriodEnd": "2025-04-30",
+      "totalAmount": 96.44,
+      "consumptionValue": 51,
+      "consumptionUnit": "Smc",
+      "unitCost": 1.15667,
+      "fixedCost": 16.77,
+      "taxes": 20.68,
+      "previousReading": 1526,
+      "currentReading": 1577,
+      "notes": "Valori corretti manualmente da layout Wekiwi legacy aprile 2025."
+    },
+    "1776804950726-202600054619-g.pdf": {
+      "utilityType": "gas",
+      "invoiceNumber": "54619-G",
+      "consumptionUnit": "Smc",
+      "unitCost": 1.19379,
+      "fixedCost": 9.14,
+      "taxes": 6.99
+    }
+  }
+}

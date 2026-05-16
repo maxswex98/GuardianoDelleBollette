@@ -1,0 +1,13 @@
+{
+  "generatedAt": "2026-05-10T00:00:00.000Z",
+  "syncMode": "bootstrap",
+  "settings": {
+    "appName": "Guardiano delle bollette",
+    "ownerName": "BERTOLI MASSIMILIANO",
+    "coOwnerName": "Alessandra Scordi",
+    "serviceAddress": "Via Emilia San Pietro, Reggio Emilia",
+    "sourceFolderLabel": "Bollette/Inserisci Qui Le Bollette",
+    "alertThresholdPercent": 15
+  },
+  "invoices": []
+}
