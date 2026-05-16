@@ -12,6 +12,34 @@ export function detectUtilityType(text: string, fileName: string, provider?: str
   const haystack = `${text}\n${fileName}`.toLowerCase();
   const providerName = provider?.toLowerCase() ?? "";
 
+  const hasElectricitySignals =
+    /\bfornitura di energia elettrica\b|\benergia elettrica\b|\benergia attiva\b|\btotale consumo\s*\(kwh\)\b|\bkwh\b|\bpod\b|\bpunto di prelievo\b/.test(
+      haystack
+    );
+  const hasGasSignals = /\bfornitura di gas naturale\b|\bgas naturale\b|\bgas domestico\b|\bsmc\b|\bstdm3\b|\bpdr\b|\bmetano\b|\b\d+-g\b/.test(
+    haystack
+  );
+
+  if (providerName === "iren") {
+    if (hasElectricitySignals) {
+      return "electricity";
+    }
+
+    if (hasGasSignals) {
+      return "gas";
+    }
+  }
+
+  if (providerName === "wekiwi") {
+    if (hasGasSignals) {
+      return "gas";
+    }
+
+    if (hasElectricitySignals) {
+      return "electricity";
+    }
+  }
+
   const gasScore = scoreMatches(haystack, [
     { pattern: /\bfornitura di gas naturale\b/, weight: 4 },
     { pattern: /\bgas naturale\b/, weight: 4 },
@@ -36,26 +64,6 @@ export function detectUtilityType(text: string, fileName: string, provider?: str
     { pattern: /\bf3\b/, weight: 1 },
     { pattern: /consumo[\s\S]{0,40}kwh\b/, weight: 2 }
   ]);
-
-  if (providerName === "iren") {
-    if (electricityScore >= gasScore || /\bkwh\b|\benergia attiva\b|\bpod\b/.test(haystack)) {
-      return "electricity";
-    }
-
-    if (gasScore > electricityScore) {
-      return "gas";
-    }
-  }
-
-  if (providerName === "wekiwi") {
-    if (gasScore >= electricityScore || /\b\d+-g\b|\bgas naturale\b|\bsmc\b/.test(haystack)) {
-      return "gas";
-    }
-
-    if (electricityScore > gasScore) {
-      return "electricity";
-    }
-  }
 
   if (gasScore > electricityScore) {
     return "gas";
