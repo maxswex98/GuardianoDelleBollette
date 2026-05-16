@@ -1,4 +1,4 @@
-﻿import path from "node:path";
+import path from "node:path";
 import { extractPdfText } from "@/lib/parsing/extract";
 import { detectProvider, detectUtilityType } from "@/lib/parsing/providers";
 import type { UtilityType } from "@/lib/types";
@@ -47,7 +47,7 @@ function firstMatch(text: string, expressions: RegExp[]): string | null {
 
 function matchAmountNearLabel(text: string, labels: string[]): number | null {
   for (const label of labels) {
-    const expression = new RegExp(`${label}[\\s:\\n-]*([0-9.]+,[0-9]+|[0-9]+(?:[.,][0-9]+)?)\\s*(?:â‚¬|euro)?`, "i");
+    const expression = new RegExp(`${label}[\\s:\\n-]*([0-9.]+,[0-9]+|[0-9]+(?:[.,][0-9]+)?)\\s*(?:€|euro)?`, "i");
     const match = text.match(expression);
     if (match?.[1]) {
       return parseItalianNumber(match[1]);
@@ -65,7 +65,7 @@ function matchMoneyNearLabel(text: string, labels: string[]): number | null {
       continue;
     }
 
-    const matches = [...section.matchAll(/([0-9.]+,[0-9]{2}|[0-9]+(?:[.,][0-9]{2}))\s*(?:â‚¬|euro)?/gi)];
+    const matches = [...section.matchAll(/([0-9.]+,[0-9]{2}|[0-9]+(?:[.,][0-9]{2}))\s*(?:€|euro)?/gi)];
     if (matches.length === 0) {
       continue;
     }
@@ -80,13 +80,13 @@ function matchMoneyNearLabel(text: string, labels: string[]): number | null {
 }
 
 function matchSectionTotalMoney(text: string, label: string): number | null {
-  const expression = new RegExp(`${label}[\\s\\S]{0,160}?([0-9.]+,[0-9]{2})\\s*(?:â‚¬|euro)`, "i");
+  const expression = new RegExp(`${label}[\\s\\S]{0,160}?([0-9.]+,[0-9]{2})\\s*(?:€|euro)`, "i");
   const match = text.match(expression);
   return match?.[1] ? parseItalianNumber(match[1]) : null;
 }
 
 function matchSectionAveragePrice(text: string, label: string, unit: string): number | null {
-  const expression = new RegExp(`${label}[\\s\\S]{0,140}?([0-9.]+,[0-9]{3,6})\\s*â‚¬\\/${unit}`, "i");
+  const expression = new RegExp(`${label}[\\s\\S]{0,140}?([0-9.]+,[0-9]{3,6})\\s*€\\/${unit}`, "i");
   const match = text.match(expression);
   return match?.[1] ? parseItalianNumber(match[1]) : null;
 }
@@ -170,12 +170,12 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
   const text = normalizeText(await extractPdfText(filePath));
   const fileName = path.basename(filePath);
   const lowerText = text.toLowerCase();
-  let utilityType = detectUtilityType(text, fileName);
   const provider = detectProvider(text);
+  let utilityType = detectUtilityType(text, fileName, provider);
   const period = extractPeriod(text);
   const isWekiwi = provider?.toLowerCase() === "wekiwi";
   const isIren = provider?.toLowerCase() === "iren";
-  const wekiwiHeaderMatch = text.match(/fattura\s+n(?:°|º|o|\.)?\s*([A-Z0-9\/-]+)\s+del\s+(\d{2}[\/.-]\d{2}[\/.-]\d{4})/i);
+  const wekiwiHeaderMatch = text.match(/fattura\s+n(?:�|�|o|\.)?\s*([A-Z0-9\/-]+)\s+del\s+(\d{2}[\/.-]\d{2}[\/.-]\d{4})/i);
 
   const hasStrongGasSignal =
     /\bfornitura di gas naturale\b|\bgas naturale\b|\bgas domestico\b|\bsmc\b|\bstdm3\b|\bmc\b|\b\d+-g\b/.test(
@@ -199,7 +199,7 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
     matchGenericField(text, [
       "numero fattura",
       "n\\. fattura",
-      "nÂ° fattura elettronica valida ai fini fiscali",
+      "n° fattura elettronica valida ai fini fiscali",
       "fattura n\\.?"
     ]) ??
     firstMatch(text, [/(?:numero fattura|n\. fattura|fattura n\.?)[\s:\n-]*([A-Z0-9\/*-]+)/i]);
@@ -219,7 +219,7 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
     parseItalianNumber(
       firstMatch(text, [
         /(?:totale da pagare|importo complessivo|totale bolletta)[\s:\n-]*([0-9.,]+)\s*euro/i,
-        /(?:totale da pagare|importo complessivo|totale bolletta)[\s:\n-]*â‚¬?\s*([0-9.,]+)/i
+        /(?:totale da pagare|importo complessivo|totale bolletta)[\s:\n-]*€?\s*([0-9.,]+)/i
       ])
     );
 
@@ -255,7 +255,7 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
     (utilityType === "electricity" ? matchSectionAveragePrice(text, "ENERGIA ATTIVA", "kWh") : null) ??
     matchMoneyNearLabel(text, ["prezzo medio", "p0", "costo unitario", "prezzo materia prima", "corrispettivo unitario"]) ??
     parseItalianNumber(
-      firstMatch(text, [/(?:costo unitario|prezzo materia(?: prima)?|corrispettivo unitario|p0)[\s:\n-]*â‚¬?\s*([0-9.,]+)/i])
+      firstMatch(text, [/(?:costo unitario|prezzo materia(?: prima)?|corrispettivo unitario|p0)[\s:\n-]*€?\s*([0-9.,]+)/i])
     ) ??
     (isWekiwi && wekiwiMatterCost !== null && consumptionValue ? Number((wekiwiMatterCost / consumptionValue).toFixed(5)) : null);
 
@@ -270,12 +270,12 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
       ? Number((wekiwiTransportCost + wekiwiSystemCost).toFixed(2))
       : isWekiwi || isIren
         ? null
-        : parseItalianNumber(firstMatch(text, [/(?:quota fissa|spesa fissa|corrispettivo fisso)[\s:\n-]*â‚¬?\s*([0-9.,]+)/i])));
+        : parseItalianNumber(firstMatch(text, [/(?:quota fissa|spesa fissa|corrispettivo fisso)[\s:\n-]*€?\s*([0-9.,]+)/i])));
 
   const taxes =
     (isIren ? matchMoneyNearLabel(text, ["accise e iva"]) : null) ??
     matchMoneyNearLabel(text, ["totale imposte e iva", "imposte", "iva", "accise"]) ??
-    parseItalianNumber(firstMatch(text, [/(?:imposte|iva|accise)[\s:\n-]*â‚¬?\s*([0-9.,]+)/i]));
+    parseItalianNumber(firstMatch(text, [/(?:imposte|iva|accise)[\s:\n-]*€?\s*([0-9.,]+)/i]));
 
   const providerReadings = isWekiwi ? extractWekiwiReadings(text) : { previousReading: null, currentReading: null };
 
@@ -326,6 +326,9 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
     notes
   };
 }
+
+
+
 
 
 

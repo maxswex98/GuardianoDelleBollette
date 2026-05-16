@@ -1,3 +1,4 @@
+import { withSiteBasePath } from "@/lib/site-path";
 import { getAppSettings } from "@/lib/db/queries";
 
 const navItems = [
@@ -29,7 +30,7 @@ export async function Shell({ children }: { children: React.ReactNode }) {
 
           <nav className="nav">
             {navItems.map((item) => (
-              <a key={item.href} href={item.href}>
+              <a key={item.href} href={withSiteBasePath(item.href)}>
                 {item.label}
               </a>
             ))}
@@ -53,4 +54,7 @@ export async function Shell({ children }: { children: React.ReactNode }) {
     </div>
   );
 }
+
+
+
 

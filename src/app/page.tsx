@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { withSiteBasePath } from "@/lib/site-path";
 import { InvoiceTable } from "@/components/invoice-table";
 import { StackedCostChart } from "@/components/stacked-cost-chart";
 import { StatCard } from "@/components/stat-card";
@@ -70,14 +70,7 @@ export default async function HomePage() {
       <section className="hero">
         <div className="hero-centered hero-centered--compact">
           <div className="hero-visual">
-            <Image
-              src="/guardian-hero.png"
-              alt="Supereroe guardiano delle bollette"
-              className="hero-image"
-              width={900}
-              height={700}
-              priority
-            />
+            <img src={withSiteBasePath("/guardian-hero.png")} alt="Supereroe guardiano delle bollette" className="hero-image" width={900} height={700} />
           </div>
           <div className="hero-copy">
             <h1>Ogni bolletta sotto controllo.</h1>
@@ -119,3 +112,4 @@ export default async function HomePage() {
     </>
   );
 }
+

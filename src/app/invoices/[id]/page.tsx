@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
 import { getInvoiceById, getStaticInvoiceIds } from "@/lib/db/queries";
+import { withSiteBasePath } from "@/lib/site-path";
 import { formatCurrency, formatDate, formatNumber, formatPercent } from "@/lib/utils";
 
 export const dynamicParams = false;
@@ -43,7 +44,7 @@ export default async function InvoiceDetailPage({
             </p>
           </div>
           {invoice.publicPdfPath ? (
-            <a href={invoice.publicPdfPath} className="trend-badge" target="_blank" rel="noreferrer">Apri PDF</a>
+            <a href={withSiteBasePath(invoice.publicPdfPath)} className="trend-badge" target="_blank" rel="noreferrer">Apri PDF</a>
           ) : (
             <span className="trend-badge">PDF non disponibile</span>
           )}
@@ -165,6 +166,8 @@ export async function generateStaticParams() {
   const ids = await getStaticInvoiceIds();
   return ids.map((id) => ({ id }));
 }
+
+
 
 
 

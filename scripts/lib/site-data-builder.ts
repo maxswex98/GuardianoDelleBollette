@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import manualRules from "../../data/manual-rules.json";
 import { parseInvoiceFile } from "@/lib/parsing/parse-invoice";
+import { withSiteBasePath } from "@/lib/site-path";
 import type { InvoiceRecord, SiteData, SiteSettings } from "@/lib/types";
 
 type SourceEntry = {
@@ -174,7 +175,7 @@ export async function buildSiteData(entries: SourceEntry[], settings: SiteSettin
     parsedInvoices.push({
       ...overridden,
       id,
-      publicPdfPath: `/pdfs/${id}${extension}`,
+      publicPdfPath: withSiteBasePath(`/pdfs/${id}${extension}`),
       localPath: entry.localPath
     });
   }
@@ -219,3 +220,6 @@ export async function buildSiteData(entries: SourceEntry[], settings: SiteSettin
 
   return data;
 }
+
+
+
