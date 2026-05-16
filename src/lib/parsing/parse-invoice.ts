@@ -177,6 +177,17 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
   const isIren = provider?.toLowerCase() === "iren";
   const wekiwiHeaderMatch = text.match(/fattura\s+n(?:°|º|o|\.)?\s*([A-Z0-9\/-]+)\s+del\s+(\d{2}[\/.-]\d{2}[\/.-]\d{4})/i);
 
+  if (isIren) {
+    const irenElectricitySignal = /\benergia elettrica\b|\benergia attiva\b|\btotale consumo\s*\(kwh\)\b|\bpod\b|\bkwh\b/.test(lowerText);
+    const irenGasSignal = /\bgas naturale\b|\bsmc\b|\bpdr\b|\bgas domestico\b/.test(lowerText);
+
+    if (irenElectricitySignal) {
+      utilityType = "electricity";
+    } else if (irenGasSignal) {
+      utilityType = "gas";
+    }
+  }
+
   const hasStrongGasSignal =
     /\bfornitura di gas naturale\b|\bgas naturale\b|\bgas domestico\b|\bsmc\b|\bstdm3\b|\bmc\b|\b\d+-g\b/.test(
       lowerText
@@ -326,6 +337,8 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
     notes
   };
 }
+
+
 
 
 
