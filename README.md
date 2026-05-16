@@ -1,4 +1,4 @@
-# Guardiano delle bollette
+﻿# Guardiano delle bollette
 
 Dashboard per luce e gas che legge i PDF da OneDrive, estrae i valori chiave, confronta ogni bolletta con la precedente e pubblica tutto come sito statico aggiornato settimanalmente.
 
