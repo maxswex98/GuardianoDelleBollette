@@ -188,20 +188,22 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
     }
   }
 
-  const hasStrongGasSignal =
-    /\bfornitura di gas naturale\b|\bgas naturale\b|\bgas domestico\b|\bsmc\b|\bstdm3\b|\bmc\b|\b\d+-g\b/.test(
-      lowerText
-    ) || /fattura[^\n]{0,40}-g\b/i.test(text);
+  if (!isIren) {
+    const hasStrongGasSignal =
+      /\bfornitura di gas naturale\b|\bgas naturale\b|\bgas domestico\b|\bsmc\b|\bstdm3\b|\bmc\b|\b\d+-g\b/.test(
+        lowerText
+      ) || /fattura[^\n]{0,40}-g\b/i.test(text);
 
-  const hasStrongElectricitySignal =
-    /\bfornitura di energia elettrica\b|\benergia elettrica\b|\bkwh\b|\bf1\b|\bf2\b|\bf3\b|\bpod\b|consumo totale fatturato nel periodo[\s\S]{0,40}kwh/.test(
-      lowerText
-    );
+    const hasStrongElectricitySignal =
+      /\bfornitura di energia elettrica\b|\benergia elettrica\b|\bkwh\b|\bf1\b|\bf2\b|\bf3\b|\bpod\b|consumo totale fatturato nel periodo[\s\S]{0,40}kwh/.test(
+        lowerText
+      );
 
-  if (hasStrongGasSignal) {
-    utilityType = "gas";
-  } else if (hasStrongElectricitySignal) {
-    utilityType = "electricity";
+    if (hasStrongGasSignal) {
+      utilityType = "gas";
+    } else if (hasStrongElectricitySignal) {
+      utilityType = "electricity";
+    }
   }
 
   const invoiceNumber =
@@ -337,13 +339,3 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
     notes
   };
 }
-
-
-
-
-
-
-
-
-
-

@@ -20,3 +20,14 @@ export function withSiteBasePath(inputPath: string): string {
 
   return basePath ? `${basePath}${normalizedPath}` : normalizedPath;
 }
+
+export function withSiteBasePathRoute(inputPath: string): string {
+  const pathWithBase = withSiteBasePath(inputPath);
+  const pathname = pathWithBase.split(/[?#]/, 1)[0];
+
+  if (/\.[a-z0-9]+$/i.test(pathname)) {
+    return pathWithBase;
+  }
+
+  return pathWithBase.endsWith("/") ? pathWithBase : `${pathWithBase}/`;
+}
