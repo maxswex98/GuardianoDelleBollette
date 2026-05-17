@@ -6,7 +6,7 @@ import { clamp } from "@/lib/utils";
 type MetricChartProps = {
   invoices: InvoiceWithComparison[];
   title: string;
-  accent: "gold" | "emerald";
+  accent: "gold" | "emerald" | "gas";
   eyebrow?: string;
   valueFor: (invoice: InvoiceWithComparison) => number | null;
   labelFor: (invoice: InvoiceWithComparison) => string;

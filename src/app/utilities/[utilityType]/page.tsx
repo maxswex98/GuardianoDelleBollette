@@ -40,7 +40,7 @@ export default async function UtilityPage({
         <MetricChart
           invoices={invoices.slice(0, 6)}
           title="Costi per mese"
-          accent={utilityType === "gas" ? "gold" : "gold"}
+          accent={utilityType === "gas" ? "gas" : "gold"}
           eyebrow="Grafico mensile"
           valueFor={(invoice) => invoice.totalAmount}
           valueLabelFor={(invoice) => formatCurrency(invoice.totalAmount)}

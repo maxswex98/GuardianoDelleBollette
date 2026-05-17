@@ -1104,3 +1104,43 @@ th {
     font-size: 0.72rem;
   }
 }
+.chart-bar {
+  height: var(--chart-bar-height, 180px);
+}
+
+.chart-bar.gas {
+  background: linear-gradient(180deg, var(--gas-soft), var(--gas));
+}
+
+.stacked-bar-shell {
+  height: var(--stacked-bar-height, 180px);
+}
+
+@media (max-width: 720px) {
+  .chart-bar {
+    height: min(calc(var(--chart-bar-height, 180px) * 0.62), 124px);
+  }
+
+  .stacked-bar-shell {
+    height: min(calc(var(--stacked-bar-height, 180px) * 0.62), 124px);
+  }
+
+  .chart-column {
+    flex-basis: 86px;
+    min-width: 86px;
+  }
+
+  .chart-row.stacked .chart-column {
+    flex-basis: 90px;
+    min-width: 90px;
+  }
+
+  .chart-column strong {
+    font-size: 0.8rem;
+  }
+
+  .chart-column span,
+  .chart-column a {
+    font-size: 0.72rem;
+  }
+}
