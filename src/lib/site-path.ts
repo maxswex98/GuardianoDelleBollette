@@ -6,6 +6,11 @@ export function getSiteBasePath(): string {
   return shouldUseBasePath ? `/${repositoryName}` : "";
 }
 
+export function getSiteVersionQuery(): string {
+  const version = process.env.GITHUB_SHA?.slice(0, 8) ?? process.env.NEXT_PUBLIC_SITE_VERSION?.trim() ?? "";
+  return version ? `?v=${version}` : "";
+}
+
 export function withSiteBasePath(inputPath: string): string {
   if (/^https?:\/\//i.test(inputPath)) {
     return inputPath;
@@ -29,5 +34,7 @@ export function withSiteBasePathRoute(inputPath: string): string {
     return pathWithBase;
   }
 
-  return pathWithBase.endsWith("/") ? pathWithBase : `${pathWithBase}/`;
+  const route = pathWithBase.endsWith("/") ? pathWithBase : `${pathWithBase}/`;
+  const versionQuery = getSiteVersionQuery();
+  return versionQuery ? `${route}${versionQuery}` : route;
 }

@@ -1,7 +1,7 @@
-import Link from "next/link";
 import type { CSSProperties } from "react";
 import type { InvoiceWithComparison } from "@/lib/types";
 import { clamp } from "@/lib/utils";
+import { withSiteBasePathRoute } from "@/lib/site-path";
 
 type MetricChartProps = {
   invoices: InvoiceWithComparison[];
@@ -48,7 +48,7 @@ export function MetricChart({
               />
               <strong>{valueLabelFor(invoice)}</strong>
               <span>{labelFor(invoice)}</span>
-              <Link href={`/invoices/${invoice.id}`}>Dettaglio</Link>
+              <a href={withSiteBasePathRoute(`/invoices/${invoice.id}`)}>Dettaglio</a>
             </div>
           );
         })}
