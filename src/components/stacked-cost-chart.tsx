@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import type { InvoiceWithComparison } from "@/lib/types";
 import { clamp, formatCurrency } from "@/lib/utils";
 
@@ -71,7 +72,10 @@ export function StackedCostChart({ invoices }: { invoices: InvoiceWithComparison
 
           return (
             <div key={bucket.label} className="chart-column">
-              <div className="stacked-bar-shell" style={{ height }}>
+              <div
+                className="stacked-bar-shell"
+                style={{ ["--stacked-bar-height" as string]: `${height}px` } as CSSProperties}
+              >
                 <div className="stacked-bar electricity" style={{ height: electricityHeight }} />
                 <div className="stacked-bar gas" style={{ height: gasHeight }} />
               </div>

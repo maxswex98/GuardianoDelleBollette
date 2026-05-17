@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { CSSProperties } from "react";
 import type { InvoiceWithComparison } from "@/lib/types";
 import { clamp } from "@/lib/utils";
 
@@ -41,7 +42,10 @@ export function MetricChart({
 
           return (
             <div key={invoice.id} className="chart-column">
-              <div className={`chart-bar ${accent}`} style={{ height }} />
+              <div
+                className={`chart-bar ${accent}`}
+                style={{ ["--chart-bar-height" as string]: `${height}px` } as CSSProperties}
+              />
               <strong>{valueLabelFor(invoice)}</strong>
               <span>{labelFor(invoice)}</span>
               <Link href={`/invoices/${invoice.id}`}>Dettaglio</Link>
