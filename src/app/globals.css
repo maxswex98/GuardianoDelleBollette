@@ -1014,3 +1014,56 @@ th {
     width: 100%;
   }
 }
+
+@media (max-width: 720px) {
+  .chart-row {
+    display: flex;
+    align-items: flex-end;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scroll-snap-type: x proximity;
+  }
+
+  .chart-row.stacked {
+    gap: 12px;
+  }
+
+  .chart-column {
+    flex: 0 0 92px;
+    min-width: 92px;
+    scroll-snap-align: start;
+  }
+
+  .chart-row.stacked .chart-column {
+    flex-basis: 96px;
+    min-width: 96px;
+  }
+
+  .chart-bar {
+    width: 100%;
+    max-width: 64px;
+    margin-inline: auto;
+  }
+
+  .stacked-bar-shell {
+    width: 100%;
+    max-width: 64px;
+    margin-inline: auto;
+  }
+
+  .chart-column strong {
+    font-size: 0.84rem;
+    line-height: 1.2;
+  }
+
+  .chart-column span,
+  .chart-column a {
+    font-size: 0.76rem;
+    line-height: 1.25;
+  }
+
+  .chart-description {
+    font-size: 0.9rem;
+  }
+}
