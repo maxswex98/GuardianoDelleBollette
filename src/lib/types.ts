@@ -1,4 +1,4 @@
-export type UtilityType = "electricity" | "gas";
+﻿export type UtilityType = "electricity" | "gas";
 
 export type InvoiceRecord = {
   id: string;
@@ -19,6 +19,7 @@ export type InvoiceRecord = {
   currentReading: number | null;
   sourceFilename: string;
   sourcePath: string;
+  sourceFolderLabel?: string | null;
   archivedPath: string | null;
   publicPdfPath: string | null;
   rawExtractedText: string;

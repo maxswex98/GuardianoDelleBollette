@@ -1,4 +1,4 @@
-import crypto from "node:crypto";
+﻿import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
 import manualRules from "../../data/manual-rules.json";
@@ -10,6 +10,7 @@ type SourceEntry = {
   localPath: string;
   sourceFilename: string;
   sourcePath: string;
+  sourceFolderLabel?: string;
   modifiedAt: string;
 };
 
@@ -100,9 +101,20 @@ function dedupeKey(invoice: InvoiceRecord) {
   ].join("|");
 }
 
+function isInboxSourceFolder(label: string | null | undefined) {
+  return (label ?? "").toLowerCase().includes("inserisci");
+}
+
 function chooseBestCandidate(left: CandidateInvoice, right: CandidateInvoice) {
   if (right.parseConfidence !== left.parseConfidence) {
     return right.parseConfidence > left.parseConfidence ? right : left;
+  }
+
+  const leftIsInbox = isInboxSourceFolder(left.sourceFolderLabel);
+  const rightIsInbox = isInboxSourceFolder(right.sourceFolderLabel);
+
+  if (leftIsInbox !== rightIsInbox) {
+    return rightIsInbox ? right : left;
   }
 
   if (referenceDate(right) !== referenceDate(left)) {
@@ -110,6 +122,24 @@ function chooseBestCandidate(left: CandidateInvoice, right: CandidateInvoice) {
   }
 
   return right.sourceFilename.localeCompare(left.sourceFilename) < 0 ? right : left;
+}
+
+function formatArchiveMonth(invoice: InvoiceRecord) {
+  const reference = invoice.billingPeriodEnd ?? invoice.issueDate ?? invoice.createdAt.slice(0, 10);
+  const date = new Date(`${reference}T00:00:00`);
+
+  if (Number.isNaN(date.getTime())) {
+    return "n.d.";
+  }
+
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = String(date.getFullYear());
+  return `${month}-${year}`;
+}
+
+function buildArchiveFileName(invoice: InvoiceRecord) {
+  const utilityLabel = invoice.utilityType === "electricity" ? "Luce" : "Gas";
+  return `${utilityLabel}_${formatArchiveMonth(invoice)}.pdf`;
 }
 
 async function resetPublicPdfDirectory() {
@@ -123,7 +153,7 @@ async function resetPublicPdfDirectory() {
   );
 }
 
-export async function buildSiteData(entries: SourceEntry[], settings: SiteSettings, syncMode: SiteData["syncMode"]) {
+export async function buildSiteData(entries: SourceEntry[], settings: SiteSettings, syncMode: SiteData["syncMode"]): Promise<SiteData & { candidates: CandidateInvoice[] }> {
   const sortedEntries = [...entries].sort((left, right) => left.sourcePath.localeCompare(right.sourcePath));
   const parsedInvoices: CandidateInvoice[] = [];
 
@@ -160,6 +190,7 @@ export async function buildSiteData(entries: SourceEntry[], settings: SiteSettin
       currentReading: parsed.currentReading,
       sourceFilename: entry.sourceFilename,
       sourcePath: entry.sourcePath,
+      sourceFolderLabel: entry.sourceFolderLabel ?? null,
       archivedPath: null,
       publicPdfPath: null,
       rawExtractedText: parsed.rawExtractedText,
@@ -170,12 +201,13 @@ export async function buildSiteData(entries: SourceEntry[], settings: SiteSettin
 
     const overridden = applyOverrides(baseRecord);
     const id = createInvoiceId(overridden);
-    const extension = path.extname(entry.sourceFilename).toLowerCase() || ".pdf";
+    const archiveFileName = buildArchiveFileName(overridden);
 
     parsedInvoices.push({
       ...overridden,
       id,
-      publicPdfPath: withSiteBasePath(`/pdfs/${id}${extension}`),
+      archivedPath: withSiteBasePath(`/pdfs/${archiveFileName}`),
+      publicPdfPath: withSiteBasePath(`/pdfs/${archiveFileName}`),
       localPath: entry.localPath
     });
   }
@@ -218,8 +250,5 @@ export async function buildSiteData(entries: SourceEntry[], settings: SiteSettin
 
   await fs.writeFile(SITE_DATA_PATH, `${JSON.stringify(data, null, 2)}\n`, "utf8");
 
-  return data;
+  return { ...data, candidates: parsedInvoices };
 }
-
-
-

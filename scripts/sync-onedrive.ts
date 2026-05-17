@@ -1,7 +1,8 @@
-import fs from "node:fs/promises";
+﻿import fs from "node:fs/promises";
 import path from "node:path";
+import { buildArchiveFileName } from "./lib/archive-file-name";
 import { buildSiteData } from "./lib/site-data-builder";
-import type { SiteSettings } from "@/lib/types";
+import type { InvoiceRecord, SiteSettings } from "@/lib/types";
 
 type DriveItem = {
   id: string;
@@ -15,6 +16,33 @@ type SourceFolder = {
   label: string;
   folderPath?: string;
   shareUrl?: string;
+};
+
+type ResolvedSourceFolder = SourceFolder & {
+  folderId: string;
+};
+
+type DownloadedFile = {
+  id: string;
+  name: string;
+  relativePath: string;
+  modifiedAt: string;
+  sourceFolderLabel: string;
+  sourceFolderId: string;
+};
+
+type StagedEntry = {
+  localPath: string;
+  sourceFilename: string;
+  sourcePath: string;
+  sourceFolderLabel: string;
+  sourceFolderId: string;
+  remoteId: string;
+  modifiedAt: string;
+};
+
+type CandidateInvoice = InvoiceRecord & {
+  localPath: string;
 };
 
 const STAGING_ROOT = path.resolve(process.cwd(), "data/staging/onedrive");
@@ -49,7 +77,7 @@ async function getAccessToken() {
     client_secret: required("ONEDRIVE_CLIENT_SECRET"),
     refresh_token: required("ONEDRIVE_REFRESH_TOKEN"),
     grant_type: "refresh_token",
-    scope: "offline_access Files.Read User.Read"
+    scope: "offline_access Files.ReadWrite User.Read"
   });
 
   const response = await fetch(tokenEndpoint, {
@@ -84,7 +112,7 @@ async function graphJson<T>(url: string, accessToken: string) {
 
 async function listChildrenByFolderId(accessToken: string, folderId: string) {
   const children: DriveItem[] = [];
-  let nextUrl = `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children?$top=200&select=id,name,folder,file,lastModifiedDateTime`;
+  let nextUrl = `https://graph.microsoft.com/v1.0/me/drive/items/${folderId}/children?$top=200&$select=id,name,folder,file,lastModifiedDateTime`;
 
   while (nextUrl) {
     const payload = await graphJson<{ value: DriveItem[]; "@odata.nextLink"?: string }>(nextUrl, accessToken);
@@ -125,10 +153,9 @@ async function getFolderId(accessToken: string, sourceFolder: SourceFolder) {
   return getFolderIdByPath(accessToken, sourceFolder.folderPath);
 }
 
-async function listPdfFiles(accessToken: string, sourceFolder: SourceFolder) {
-  const rootId = await getFolderId(accessToken, sourceFolder);
-  const queue = [{ id: rootId, relativePath: "" }];
-  const files: Array<{ id: string; name: string; relativePath: string; modifiedAt: string }> = [];
+async function listPdfFiles(accessToken: string, sourceFolder: ResolvedSourceFolder) {
+  const queue = [{ id: sourceFolder.folderId, relativePath: "" }];
+  const files: DownloadedFile[] = [];
 
   while (queue.length > 0) {
     const current = queue.shift();
@@ -152,7 +179,9 @@ async function listPdfFiles(accessToken: string, sourceFolder: SourceFolder) {
         id: item.id,
         name: item.name,
         relativePath: itemRelativePath,
-        modifiedAt: item.lastModifiedDateTime
+        modifiedAt: item.lastModifiedDateTime,
+        sourceFolderLabel: sourceFolder.label,
+        sourceFolderId: sourceFolder.folderId
       });
     }
   }
@@ -177,9 +206,97 @@ async function downloadDriveItem(accessToken: string, itemId: string, destinatio
   await fs.writeFile(destinationPath, Buffer.from(arrayBuffer));
 }
 
+async function updateDriveItem(
+  accessToken: string,
+  itemId: string,
+  changes: { name?: string; parentFolderId?: string | null }
+) {
+  const body: Record<string, unknown> = {};
+
+  if (changes.name) {
+    body.name = changes.name;
+  }
+
+  if (changes.parentFolderId) {
+    body.parentReference = { id: changes.parentFolderId };
+  }
+
+  if (Object.keys(body).length === 0) {
+    return;
+  }
+
+  const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${itemId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "content-type": "application/json"
+    },
+    body: JSON.stringify(body)
+  });
+
+  if (!response.ok) {
+    throw new Error(`Aggiornamento OneDrive fallito (${response.status}) per ${itemId}: ${await response.text()}`);
+  }
+}
+
+async function deleteDriveItem(accessToken: string, itemId: string) {
+  const response = await fetch(`https://graph.microsoft.com/v1.0/me/drive/items/${itemId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${accessToken}`
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error(`Eliminazione OneDrive fallita (${response.status}) per ${itemId}: ${await response.text()}`);
+  }
+}
+
 async function prepareStagingDirectory() {
   await fs.rm(STAGING_ROOT, { recursive: true, force: true });
   await fs.mkdir(STAGING_ROOT, { recursive: true });
+}
+
+function referenceDate(invoice: InvoiceRecord) {
+  return invoice.billingPeriodEnd ?? invoice.issueDate ?? invoice.createdAt.slice(0, 10);
+}
+
+function dedupeKey(invoice: InvoiceRecord) {
+  if (invoice.invoiceNumber && invoice.provider) {
+    return `${invoice.utilityType}|${invoice.provider.toLowerCase()}|${invoice.invoiceNumber.toLowerCase()}`;
+  }
+
+  return [
+    invoice.utilityType,
+    invoice.provider?.toLowerCase() ?? "unknown",
+    invoice.billingPeriodStart ?? "missing-start",
+    invoice.billingPeriodEnd ?? "missing-end",
+    invoice.totalAmount ?? "missing-total",
+    invoice.consumptionValue ?? "missing-consumption"
+  ].join("|");
+}
+
+function isInboxSourceFolder(label: string | null | undefined) {
+  return (label ?? "").toLowerCase().includes("inserisci");
+}
+
+function chooseBestCandidate(left: CandidateInvoice, right: CandidateInvoice) {
+  if (right.parseConfidence !== left.parseConfidence) {
+    return right.parseConfidence > left.parseConfidence ? right : left;
+  }
+
+  const leftIsInbox = isInboxSourceFolder(left.sourceFolderLabel);
+  const rightIsInbox = isInboxSourceFolder(right.sourceFolderLabel);
+
+  if (leftIsInbox !== rightIsInbox) {
+    return rightIsInbox ? right : left;
+  }
+
+  if (referenceDate(right) !== referenceDate(left)) {
+    return referenceDate(right) > referenceDate(left) ? right : left;
+  }
+
+  return right.sourceFilename.localeCompare(left.sourceFilename) < 0 ? right : left;
 }
 
 async function main() {
@@ -205,13 +322,22 @@ async function main() {
   }
 
   const accessToken = await getAccessToken();
-  const remoteFiles = (
-    await Promise.all(sourceFolders.map(async (sourceFolder) => listPdfFiles(accessToken, sourceFolder)))
-  ).flat();
+  const resolvedFolders: ResolvedSourceFolder[] = [];
+
+  for (const sourceFolder of sourceFolders) {
+    resolvedFolders.push({
+      ...sourceFolder,
+      folderId: await getFolderId(accessToken, sourceFolder)
+    });
+  }
+
+  const archiveFolder = resolvedFolders.find((folder) => folder.label.toLowerCase().includes("archivio")) ?? null;
+
+  const remoteFiles = (await Promise.all(resolvedFolders.map(async (sourceFolder) => listPdfFiles(accessToken, sourceFolder)))).flat();
 
   await prepareStagingDirectory();
 
-  const entries = [];
+  const entries: StagedEntry[] = [];
   for (const file of remoteFiles) {
     const localPath = path.join(STAGING_ROOT, file.relativePath.replace(/\//g, path.sep));
     await downloadDriveItem(accessToken, file.id, localPath);
@@ -219,6 +345,9 @@ async function main() {
       localPath,
       sourceFilename: file.name,
       sourcePath: file.relativePath,
+      sourceFolderLabel: file.sourceFolderLabel,
+      sourceFolderId: file.sourceFolderId,
+      remoteId: file.id,
       modifiedAt: file.modifiedAt
     });
   }
@@ -236,7 +365,53 @@ async function main() {
     alertThresholdPercent: Number(process.env.ALERT_THRESHOLD_PERCENT ?? 15)
   };
 
-  const data = await buildSiteData(entries, settings, "onedrive");
+  const data = (await buildSiteData(entries, settings, "onedrive")) as Awaited<ReturnType<typeof buildSiteData>>;
+
+  const entryByLocalPath = new Map(entries.map((entry) => [entry.localPath, entry]));
+  const groupedCandidates = new Map<string, CandidateInvoice[]>();
+
+  for (const candidate of data.candidates) {
+    const key = dedupeKey(candidate);
+    const group = groupedCandidates.get(key);
+    if (group) {
+      group.push(candidate);
+    } else {
+      groupedCandidates.set(key, [candidate]);
+    }
+  }
+
+  for (const [key, group] of groupedCandidates) {
+    const winner = group.reduce((left, right) => chooseBestCandidate(left, right));
+    const winnerEntry = entryByLocalPath.get(winner.localPath);
+    if (!winnerEntry) {
+      continue;
+    }
+
+    const canonicalName = buildArchiveFileName(winner);
+    const targetFolderId = archiveFolder?.folderId ?? winnerEntry.sourceFolderId;
+    const shouldMove = Boolean(archiveFolder?.folderId && winnerEntry.sourceFolderId !== archiveFolder.folderId);
+
+    await updateDriveItem(accessToken, winnerEntry.remoteId, {
+      name: canonicalName,
+      parentFolderId: shouldMove ? targetFolderId : undefined
+    });
+
+    for (const candidate of group) {
+      if (candidate.localPath === winner.localPath) {
+        continue;
+      }
+
+      const loserEntry = entryByLocalPath.get(candidate.localPath);
+      if (!loserEntry) {
+        continue;
+      }
+
+      await deleteDriveItem(accessToken, loserEntry.remoteId);
+    }
+
+    console.log(`Archiviata ${canonicalName} (${key})`);
+  }
+
   console.log(`Sincronizzazione OneDrive completata: ${data.invoices.length} bollette pubblicate.`);
 }
 

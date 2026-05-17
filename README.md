@@ -15,7 +15,7 @@ Dashboard per luce e gas che legge i PDF da OneDrive, estrae i valori chiave, co
 
 1. Carichi i PDF nella cartella OneDrive scelta.
 2. Ogni lunedi GitHub Actions legge la cartella via API.
-3. Scarica i PDF rilevanti, scarta rifiuti/rimborsi e deduplica.
+3. Scarica i PDF rilevanti, scarta rifiuti/rimborsi, deduplica e rinomina i canonici come `Luce_MM-YYYY.pdf` / `Gas_MM-YYYY.pdf`, spostando i file della Inbox in Archivio.
 4. Aggiorna il dataset JSON e i PDF pubblici nel repository.
 5. Esegue la build statica e pubblica la dashboard.
 
@@ -50,6 +50,8 @@ Nel repository GitHub devi impostare:
 - `ONEDRIVE_CLIENT_SECRET`
 - `ONEDRIVE_REFRESH_TOKEN`
 
+> Nota: l'app Microsoft deve avere anche il permesso `Files.ReadWrite`, e dopo averlo aggiunto devi rifare il login iniziale per rigenerare il refresh token.
+
 ### Repository variables
 
 - `ONEDRIVE_ARCHIVE_SHARE_URL`
@@ -82,3 +84,4 @@ Il sistema ha gia una whitelist/blacklist minima:
 - deduplica prima per numero fattura, poi per periodo/totale
 
 Per migliorare ancora il parsing in futuro, il punto giusto e `src/lib/parsing/parse-invoice.ts`.
+
