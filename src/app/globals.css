@@ -717,3 +717,300 @@ th {
 
 
 
+
+@media (max-width: 720px) {
+  .content {
+    padding: 16px;
+    gap: 18px;
+  }
+
+  .sidebar {
+    padding: 20px 16px 16px;
+    gap: 18px;
+    border-right: 0;
+    border-bottom: 1px solid var(--sidebar-line);
+  }
+
+  .sidebar-top {
+    gap: 18px;
+  }
+
+  .sidebar-bottom {
+    margin-top: 0;
+    padding-top: 0;
+  }
+
+  .brand-meter {
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+
+  .sidebar-copy {
+    max-width: none;
+    font-size: 0.96rem;
+  }
+
+  .service-address {
+    font-size: 0.95rem;
+    padding-left: 12px;
+  }
+
+  .nav {
+    gap: 8px;
+  }
+
+  .nav a {
+    min-height: 50px;
+    padding: 14px 16px;
+    border-radius: 16px;
+    text-align: center;
+    justify-content: center;
+  }
+
+  .sidebar-channel {
+    padding: 16px;
+    border-radius: 24px;
+  }
+
+  .sidebar-channel strong {
+    font-size: 1rem;
+  }
+
+  .hero {
+    padding: 22px 16px 20px;
+    border-radius: 26px;
+  }
+
+  .hero::after {
+    inset: 14px 14px auto auto;
+    width: 120px;
+    height: 120px;
+    opacity: 0.5;
+  }
+
+  .hero-centered {
+    gap: 14px;
+  }
+
+  .hero-centered--compact {
+    max-width: none;
+  }
+
+  .hero-visual {
+    width: 100%;
+    max-width: 360px;
+    padding: 12px;
+    border-radius: 24px;
+  }
+
+  .hero-image {
+    width: min(100%, 320px);
+    filter: drop-shadow(0 12px 22px rgba(16, 32, 56, 0.16));
+  }
+
+  .hero h1 {
+    font-size: clamp(2rem, 1.4rem + 4vw, 2.75rem);
+  }
+
+  .hero-subtitle {
+    max-width: none;
+    font-size: 0.96rem;
+  }
+
+  .stats-grid,
+  .cards-grid,
+  .history-grid,
+  .detail-grid,
+  .meta-grid,
+  .chart-row,
+  .chart-row.stacked {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    gap: 14px;
+  }
+
+  .stat-card {
+    order: 0;
+    border-radius: 24px;
+  }
+
+  .stat-card.featured {
+    order: -1;
+  }
+
+  .stat-card-band {
+    padding: 18px 18px 8px;
+  }
+
+  .stat-card-body {
+    min-height: 0;
+    padding: 0 18px 18px;
+    gap: 10px;
+  }
+
+  .stat-card h3 {
+    font-size: clamp(1.8rem, 1.4rem + 3vw, 2.4rem);
+  }
+
+  .stat-card p:last-child {
+    font-size: 0.96rem;
+  }
+
+  .stat-card.featured .stat-card-band {
+    min-height: 72px;
+    padding: 16px 18px;
+  }
+
+  .stat-card.featured .stat-card-body {
+    min-height: 0;
+    padding: 18px;
+  }
+
+  .stat-card.featured .stat-card-orb {
+    width: 32px;
+    height: 32px;
+  }
+
+  .panel {
+    padding: 18px;
+    border-radius: 24px;
+  }
+
+  .section-heading,
+  .invoice-header {
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+
+  .section-note {
+    font-size: 0.94rem;
+  }
+
+  .table-wrap {
+    margin-inline: -6px;
+    padding-inline: 6px;
+  }
+
+  table {
+    min-width: 640px;
+  }
+
+  th,
+  td {
+    padding: 10px 8px;
+  }
+
+  .chart-row {
+    min-height: 0;
+    gap: 12px;
+  }
+
+  .chart-column {
+    justify-items: start;
+    text-align: left;
+  }
+
+  .chart-column strong,
+  .chart-column span {
+    text-align: left;
+  }
+
+  .chart-column a {
+    justify-self: start;
+  }
+
+  .chart-description {
+    max-width: none;
+  }
+
+  .detail-card {
+    padding: 14px;
+    border-radius: 20px;
+  }
+
+  .detail-card strong {
+    font-size: 1.18rem;
+  }
+}
+
+@media (max-width: 520px) {
+  .content {
+    padding: 14px;
+  }
+
+  .sidebar {
+    padding: 18px 14px 14px;
+  }
+
+  .brand-meter {
+    gap: 8px;
+  }
+
+  .brand-pill {
+    padding: 7px 10px;
+    font-size: 0.72rem;
+  }
+
+  .sidebar h1 {
+    font-size: clamp(2rem, 1.5rem + 5vw, 2.6rem);
+  }
+
+  .hero {
+    padding: 20px 14px 18px;
+  }
+
+  .hero-visual {
+    padding: 10px;
+  }
+
+  .hero-image {
+    width: min(100%, 300px);
+  }
+
+  .stat-card-band {
+    padding: 16px 16px 8px;
+  }
+
+  .stat-card-body,
+  .stat-card.featured .stat-card-body {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .panel {
+    padding: 16px;
+    border-radius: 22px;
+  }
+
+  .detail-card {
+    padding: 12px;
+  }
+
+  .table-wrap {
+    margin-inline: -4px;
+    padding-inline: 4px;
+  }
+
+  table {
+    min-width: 600px;
+  }
+}
+
+@media (max-width: 720px) {
+  .nav a {
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+}
+
+@media (max-width: 520px) {
+  .nav a {
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+}
