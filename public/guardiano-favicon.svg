@@ -1,0 +1,59 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Guardiano delle bollette</title>
+  <desc id="desc">Favicon del Guardiano delle bollette con sfondo trasparente e icona blu in stile supereroe</desc>
+  <defs>
+    <linearGradient id="bg" x1="88" y1="76" x2="424" y2="438" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1c3f8a" />
+      <stop offset="0.55" stop-color="#112d6a" />
+      <stop offset="1" stop-color="#08183c" />
+    </linearGradient>
+    <linearGradient id="glow" x1="166" y1="132" x2="350" y2="364" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7ce8ff" stop-opacity=".95" />
+      <stop offset="1" stop-color="#7ce8ff" stop-opacity=".18" />
+    </linearGradient>
+    <linearGradient id="cape" x1="192" y1="210" x2="366" y2="380" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ffb622" />
+      <stop offset="1" stop-color="#ff8d15" />
+    </linearGradient>
+    <linearGradient id="shield" x1="178" y1="190" x2="334" y2="356" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6ff3ff" />
+      <stop offset="1" stop-color="#2fa9ff" />
+    </linearGradient>
+    <linearGradient id="suit" x1="188" y1="218" x2="324" y2="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2a7dff" />
+      <stop offset="1" stop-color="#0a49b8" />
+    </linearGradient>
+  </defs>
+
+  <rect x="64" y="64" width="384" height="384" rx="92" fill="url(#bg)" />
+  <path d="M118 286C118 194 186 128 256 128C326 128 394 194 394 286V326C394 372 360 408 314 408H198C152 408 118 372 118 326V286Z" fill="url(#glow)" opacity="0.6" />
+  <path d="M150 250C150 185 198 138 256 138C314 138 362 185 362 250V288C362 330 330 364 288 364H224C182 364 150 330 150 288V250Z" fill="none" stroke="#8fefff" stroke-width="10" stroke-linecap="round" opacity="0.95" />
+
+  <path d="M170 274C170 246 189 226 216 226H296C323 226 342 246 342 274V334C342 351 329 364 312 364H200C183 364 170 351 170 334V274Z" fill="url(#suit)" />
+  <path d="M192 282C192 270 201 260 213 260H299C311 260 320 270 320 282V330C320 339 313 346 304 346H208C199 346 192 339 192 330V282Z" fill="#0c2f7a" opacity="0.55" />
+
+  <path d="M220 214C220 188 238 168 256 168C274 168 292 188 292 214V222H220V214Z" fill="#f5c6a5" />
+  <path d="M207 210C207 194 220 181 236 181H276C292 181 305 194 305 210V223H207V210Z" fill="#173a7a" />
+  <path d="M214 184C214 157 232 145 256 145C280 145 298 157 298 184V195H214V184Z" fill="#244c99" />
+  <path d="M223 179C223 164 236 153 256 153C276 153 289 164 289 179V187H223V179Z" fill="#1f3f7f" />
+  <path d="M230 184C238 175 247 171 256 171C265 171 274 175 282 184L288 197H224L230 184Z" fill="#ffb46d" opacity="0.9" />
+  <path d="M229 215C229 207 234 202 242 202H270C278 202 283 207 283 215V224H229V215Z" fill="#f4b58c" />
+
+  <path d="M172 264C160 253 156 240 160 225C165 206 182 194 202 194H215V214C196 220 183 236 178 256L172 264Z" fill="url(#cape)" />
+  <path d="M340 264C352 253 356 240 352 225C347 206 330 194 310 194H297V214C316 220 329 236 334 256L340 264Z" fill="url(#cape)" />
+
+  <path d="M205 264C205 251 215 241 228 241H284C297 241 307 251 307 264V307C307 322 295 334 280 334H232C217 334 205 322 205 307V264Z" fill="#163b8f" />
+  <path d="M218 268C218 260 224 254 232 254H280C288 254 294 260 294 268V300C294 309 287 316 278 316H234C225 316 218 309 218 300V268Z" fill="url(#shield)" />
+  <path d="M233 292L246 277L257 288L280 263L292 272L257 310L233 292Z" fill="#0d7fd9" opacity="0.95" />
+  <rect x="235" y="289" width="11" height="22" rx="2" fill="#68f0a0" />
+  <rect x="250" y="280" width="11" height="31" rx="2" fill="#ffd35c" />
+  <rect x="265" y="273" width="11" height="38" rx="2" fill="#ff9f43" />
+  <path d="M241 281C247 277 253 274 260 273" stroke="#10214d" stroke-width="4" stroke-linecap="round" opacity="0.35" />
+
+  <path d="M157 221C158 216 162 212 167 212C172 212 176 216 177 221C181 216 188 212 193 212C201 212 207 218 207 226C207 234 200 240 193 242C187 243 180 240 177 235C174 240 168 243 162 242C155 240 149 234 149 226C149 223 152 221 157 221Z" fill="#ff8f26" />
+  <path d="M347 221C348 216 352 212 357 212C362 212 366 216 367 221C371 216 378 212 383 212C391 212 397 218 397 226C397 234 390 240 383 242C377 243 370 240 367 235C364 240 358 243 352 242C345 240 339 234 339 226C339 223 342 221 347 221Z" fill="#ffd43b" />
+  <path d="M256 118L262 131L276 132L265 141L268 155L256 148L244 155L247 141L236 132L250 131L256 118Z" fill="#ffd65a" stroke="#ffb400" stroke-width="3" stroke-linejoin="round" />
+
+  <text x="256" y="398" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="30" font-weight="800" fill="#f7fbff" letter-spacing="1.2">GUARDIANO</text>
+  <text x="256" y="424" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="18" font-weight="800" fill="#f7fbff" letter-spacing="2.2">DELLE BOLLETTE</text>
+</svg>
