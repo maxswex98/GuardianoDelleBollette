@@ -5,3 +5,4 @@ data/archive
 data/staging
 data/processed
 *.log
+tsconfig.tsbuildinfo

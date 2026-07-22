@@ -228,6 +228,20 @@ export async function buildSiteData(entries: SourceEntry[], settings: SiteSettin
     return right.createdAt.localeCompare(left.createdAt);
   });
 
+  const usedArchiveNames = new Set<string>();
+  for (const invoice of finalInvoices) {
+    const baseName = buildArchiveFileName(invoice).replace(/\.pdf$/i, "");
+    let archiveFileName = `${baseName}.pdf`;
+    let suffix = 2;
+    while (usedArchiveNames.has(archiveFileName.toLowerCase())) {
+      archiveFileName = `${baseName}_${suffix}.pdf`;
+      suffix += 1;
+    }
+    usedArchiveNames.add(archiveFileName.toLowerCase());
+    invoice.archivedPath = withSiteBasePath(`/pdfs/${archiveFileName}`);
+    invoice.publicPdfPath = invoice.archivedPath;
+  }
+
   await resetPublicPdfDirectory();
 
   await Promise.all(

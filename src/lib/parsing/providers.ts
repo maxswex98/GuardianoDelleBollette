@@ -90,7 +90,6 @@ export function detectProvider(text: string): string | null {
     "Wekiwi"
   ];
 
-  const lower = text.toLowerCase();
-  const match = providers.find((provider) => lower.includes(provider.toLowerCase()));
+  const match = providers.find((provider) => new RegExp(`\\b${provider}\\b`, "i").test(text));
   return match ?? null;
 }

@@ -387,7 +387,7 @@ async function main() {
       continue;
     }
 
-    const canonicalName = buildArchiveFileName(winner);
+    const canonicalName = winner.publicPdfPath?.split("/").pop() ?? buildArchiveFileName(winner);
     const targetFolderId = archiveFolder?.folderId ?? winnerEntry.sourceFolderId;
     const shouldMove = Boolean(archiveFolder?.folderId && winnerEntry.sourceFolderId !== archiveFolder.folderId);
 

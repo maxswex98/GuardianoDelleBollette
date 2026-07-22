@@ -59,13 +59,13 @@ function matchAmountNearLabel(text: string, labels: string[]): number | null {
 
 function matchMoneyNearLabel(text: string, labels: string[]): number | null {
   for (const label of labels) {
-    const expression = new RegExp(`${label}[\\s:\\n-]*([^\\n]{0,120})`, "i");
+    const expression = new RegExp(`${label}[\\s:\\n]*([^\\n]{0,120})`, "i");
     const section = text.match(expression)?.[1];
     if (!section) {
       continue;
     }
 
-    const matches = [...section.matchAll(/([0-9.]+,[0-9]{2}|[0-9]+(?:[.,][0-9]{2}))\s*(?:€|euro)?/gi)];
+    const matches = [...section.matchAll(/(-?[0-9.]+,[0-9]{2}|-?[0-9]+(?:[.,][0-9]{2}))\s*(?:€|euro)?/gi)];
     if (matches.length === 0) {
       continue;
     }
@@ -117,7 +117,7 @@ function matchGenericField(text: string, labels: string[]): string | null {
 
 function extractPeriod(text: string) {
   const numericMatch = text.match(
-    /(?:periodo(?: di fatturazione| di riferimento)?|fornitura)[\s:\n-]*(\d{2}[\/.-]\d{2}[\/.-]\d{4})\s*(?:-|al|a)\s*(\d{2}[\/.-]\d{2}[\/.-]\d{4})/i
+    /(?:periodo(?: di fatturazione| di riferimento| di competenza)?|fornitura)[\s:\n-]*(\d{2}[\/.-]\d{2}[\/.-]\d{4})\s*(?:-|al|a)\s*(\d{2}[\/.-]\d{2}[\/.-]\d{4})/i
   );
 
   if (numericMatch) {
@@ -149,6 +149,23 @@ function scoreConfidence(values: Array<unknown>): number {
   return Math.min(0.35 + present * 0.09, 0.98);
 }
 
+function extractIllumiaReadings(text: string) {
+  const matches = [...text.matchAll(/(\d{2}\/\d{2}\/\d{4})\s*(?:Effettiva|Stimata)\s*([0-9.]+(?:,[0-9]+)?)/gi)];
+  const values = matches.map((match) => parseItalianNumber(match[2])).filter((value): value is number => value !== null);
+
+  if (values.length < 2) {
+    return {
+      previousReading: null,
+      currentReading: null
+    };
+  }
+
+  return {
+    previousReading: values[1] ?? null,
+    currentReading: values[0] ?? null
+  };
+}
+
 function extractWekiwiReadings(text: string) {
   const matches = [...text.matchAll(/Lettura\s+Certa\s+Distributore(?:del)?\s+\d{2}\/\d{2}\/\d{4}\s*([0-9.]+(?:,[0-9]+)?)/gi)];
   const values = matches.map((match) => parseItalianNumber(match[1])).filter((value): value is number => value !== null);
@@ -175,7 +192,8 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
   const period = extractPeriod(text);
   const isWekiwi = provider?.toLowerCase() === "wekiwi";
   const isIren = provider?.toLowerCase() === "iren";
-  const wekiwiHeaderMatch = text.match(/fattura\s+n(?:�|�|o|\.)?\s*([A-Z0-9\/-]+)\s+del\s+(\d{2}[\/.-]\d{2}[\/.-]\d{4})/i);
+  const isIllumia = provider?.toLowerCase() === "illumia";
+  const wekiwiHeaderMatch = text.match(/fattura\s+n(?:�|�|o|\.)?\s*([A-Z0-9\/-]+)\s+del\s+(\d{2}[\/.-]\d{2}[\/.-]\d{4})/i);
 
   if (isIren) {
     const irenElectricitySignal = /\benergia elettrica\b|\benergia attiva\b|\btotale consumo\s*\(kwh\)\b|\bpod\b|\bkwh\b/.test(lowerText);
@@ -208,6 +226,7 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
 
   const invoiceNumber =
     wekiwiHeaderMatch?.[1]?.trim() ??
+    firstMatch(text, [/n[.°]?\s*fattura elettronica valida ai fini fiscali[\s:\n-]*([0-9][A-Z0-9\/-]*)/i]) ??
     firstMatch(text, [/fattura\s+n\.\s*([A-Z0-9*\/-]+)/i]) ??
     matchGenericField(text, [
       "numero fattura",
@@ -219,7 +238,7 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
 
   const issueDate =
     parseItalianDate(wekiwiHeaderMatch?.[2] ?? null) ??
-    matchDateNearLabel(text, ["data emissione", "emessa il", "data fattura"]) ??
+    matchDateNearLabel(text, ["data di emissione", "data emissione", "emessa il", "data fattura"]) ??
     parseItalianDate(firstMatch(text, [/(?:emessa in data)[\s:\n-]*([0-9]{1,2}\s+[A-Za-z]+\s+[0-9]{4})/i])) ??
     parseItalianDate(firstMatch(text, [/(?:data emissione|emessa il|data fattura)[\s:\n-]*(\d{2}[\/.-]\d{2}[\/.-]\d{4})/i]));
 
@@ -240,6 +259,7 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
     utilityType === "gas"
       ? parseItalianNumber(
           firstMatch(text, [
+            /consumo totale fatturato nel\s*periodo[\s:\n-]*([0-9.,]+)\s*smc/i,
             /consumi fatturati in bolletta[\s:\n-]*([0-9.,]+)/i,
             /consumi totali del periodo[\s:\n-]*([0-9.,]+)/i,
             /standard metri cubi[\s:\n-]*([0-9.,]+)/i,
@@ -264,6 +284,7 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
   const wekiwiMatterCost = isWekiwi ? matchMoneyNearLabel(text, ["Spesa per la materia gas naturale"]) : null;
 
   const unitCost =
+    (isIllumia && utilityType === "gas" ? matchSectionAveragePrice(text, "QUOTA PER CONSUMI", "smc") : null) ??
     (isWekiwi ? matchSectionAveragePrice(text, "Quota consumi", "smc") : null) ??
     (utilityType === "electricity" ? matchSectionAveragePrice(text, "ENERGIA ATTIVA", "kWh") : null) ??
     matchMoneyNearLabel(text, ["prezzo medio", "p0", "costo unitario", "prezzo materia prima", "corrispettivo unitario"]) ??
@@ -278,6 +299,7 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
   const fixedCost =
     (isWekiwi ? matchSectionTotalMoney(text, "Quota fissa") : null) ??
     (isIren ? matchSectionTotalMoney(text, "Quota fissa") : null) ??
+    (isIllumia ? matchSectionTotalMoney(text, "Quota fissa") : null) ??
     matchMoneyNearLabel(text, ["di cui spesa per la quota fissa", "quota fissa", "spesa fissa", "corrispettivo fisso"]) ??
     (isWekiwi && wekiwiTransportCost !== null && wekiwiSystemCost !== null
       ? Number((wekiwiTransportCost + wekiwiSystemCost).toFixed(2))
@@ -286,11 +308,15 @@ export async function parseInvoiceFile(filePath: string): Promise<ParsedInvoiceI
         : parseItalianNumber(firstMatch(text, [/(?:quota fissa|spesa fissa|corrispettivo fisso)[\s:\n-]*€?\s*([0-9.,]+)/i])));
 
   const taxes =
-    (isIren ? matchMoneyNearLabel(text, ["accise e iva"]) : null) ??
+    (isIren || isIllumia ? matchMoneyNearLabel(text, ["accise e iva"]) : null) ??
     matchMoneyNearLabel(text, ["totale imposte e iva", "imposte", "iva", "accise"]) ??
     parseItalianNumber(firstMatch(text, [/(?:imposte|iva|accise)[\s:\n-]*€?\s*([0-9.,]+)/i]));
 
-  const providerReadings = isWekiwi ? extractWekiwiReadings(text) : { previousReading: null, currentReading: null };
+  const providerReadings = isWekiwi
+    ? extractWekiwiReadings(text)
+    : isIllumia
+      ? extractIllumiaReadings(text)
+      : { previousReading: null, currentReading: null };
 
   const previousReading =
     providerReadings.previousReading ??
