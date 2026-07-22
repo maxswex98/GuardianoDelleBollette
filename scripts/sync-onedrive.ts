@@ -380,21 +380,22 @@ async function main() {
     }
   }
 
+  type ArchiveOperation = {
+    key: string;
+    canonicalName: string;
+    winnerEntry: StagedEntry;
+    targetFolderId: string;
+    shouldMove: boolean;
+  };
+
+  const operations: ArchiveOperation[] = [];
+
   for (const [key, group] of groupedCandidates) {
     const winner = group.reduce((left, right) => chooseBestCandidate(left, right));
     const winnerEntry = entryByLocalPath.get(winner.localPath);
     if (!winnerEntry) {
       continue;
     }
-
-    const canonicalName = winner.publicPdfPath?.split("/").pop() ?? buildArchiveFileName(winner);
-    const targetFolderId = archiveFolder?.folderId ?? winnerEntry.sourceFolderId;
-    const shouldMove = Boolean(archiveFolder?.folderId && winnerEntry.sourceFolderId !== archiveFolder.folderId);
-
-    await updateDriveItem(accessToken, winnerEntry.remoteId, {
-      name: canonicalName,
-      parentFolderId: shouldMove ? targetFolderId : undefined
-    });
 
     for (const candidate of group) {
       if (candidate.localPath === winner.localPath) {
@@ -409,7 +410,44 @@ async function main() {
       await deleteDriveItem(accessToken, loserEntry.remoteId);
     }
 
-    console.log(`Archiviata ${canonicalName} (${key})`);
+    operations.push({
+      key,
+      canonicalName: winner.publicPdfPath?.split("/").pop() ?? buildArchiveFileName(winner),
+      winnerEntry,
+      targetFolderId: archiveFolder?.folderId ?? winnerEntry.sourceFolderId,
+      shouldMove: Boolean(archiveFolder?.folderId && winnerEntry.sourceFolderId !== archiveFolder.folderId)
+    });
+  }
+
+  // Un rename può fallire se il nome di destinazione è ancora occupato da un file
+  // che verrà rinominato più avanti nello stesso giro: si riprova dopo gli altri.
+  let pendingOperations = operations.filter(
+    (operation) => operation.shouldMove || operation.winnerEntry.sourceFilename !== operation.canonicalName
+  );
+
+  for (let attempt = 0; attempt < 2 && pendingOperations.length > 0; attempt += 1) {
+    const failedOperations: ArchiveOperation[] = [];
+
+    for (const operation of pendingOperations) {
+      try {
+        await updateDriveItem(accessToken, operation.winnerEntry.remoteId, {
+          name: operation.canonicalName,
+          parentFolderId: operation.shouldMove ? operation.targetFolderId : undefined
+        });
+      } catch (error) {
+        if (attempt === 0) {
+          failedOperations.push(operation);
+        } else {
+          throw error;
+        }
+      }
+    }
+
+    pendingOperations = failedOperations;
+  }
+
+  for (const operation of operations) {
+    console.log(`Archiviata ${operation.canonicalName} (${operation.key})`);
   }
 
   console.log(`Sincronizzazione OneDrive completata: ${data.invoices.length} bollette pubblicate.`);

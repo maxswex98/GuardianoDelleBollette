@@ -244,8 +244,10 @@ export async function buildSiteData(entries: SourceEntry[], settings: SiteSettin
 
   await resetPublicPdfDirectory();
 
+  const publishedInvoices = finalInvoices.filter((invoice) => (invoice.totalAmount ?? 0) >= 0);
+
   await Promise.all(
-    finalInvoices.map((invoice) => {
+    publishedInvoices.map((invoice) => {
       const fileName = invoice.publicPdfPath?.split("/").pop();
       if (!fileName) {
         return Promise.resolve();
@@ -259,7 +261,7 @@ export async function buildSiteData(entries: SourceEntry[], settings: SiteSettin
     generatedAt: new Date().toISOString(),
     syncMode,
     settings,
-    invoices: finalInvoices.map(({ localPath, ...invoice }) => invoice)
+    invoices: publishedInvoices.map(({ localPath, ...invoice }) => invoice)
   };
 
   await fs.writeFile(SITE_DATA_PATH, `${JSON.stringify(data, null, 2)}\n`, "utf8");
